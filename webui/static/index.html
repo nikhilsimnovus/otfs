@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simnovus · Zak-OTFS Waveform Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="logo">◮</div>
+    <div>
+      <div class="brand-name">SIMNOVUS <span>LABS</span></div>
+      <div class="product">Zak-OTFS Waveform Studio</div>
+    </div>
+  </div>
+  <div class="chips">
+    <span class="chip chip-violet">Delay-Doppler PHY</span>
+    <span class="chip chip-cyan">6G candidate</span>
+    <span class="chip chip-amber">Research preview</span>
+    <span class="chip chip-dim" id="version-chip" title="Studio version">v—</span>
+    <button class="update-btn" id="update-btn" title="Pull the latest build from GitHub and restart">
+      <span class="update-icon" id="update-icon">⤓</span>
+      <span id="update-label">Update</span>
+    </button>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- ========================= sidebar ========================= -->
+  <aside>
+    <section class="panel">
+      <h3>Waveform</h3>
+      <div class="grid2">
+        <label>Delay bins M
+          <select id="M"><option>16</option><option selected>32</option><option>64</option></select>
+        </label>
+        <label>Doppler bins N
+          <select id="N"><option>8</option><option selected>16</option><option>32</option></select>
+        </label>
+        <label>SCS
+          <select id="scs_khz"><option selected>15</option><option>30</option><option>60</option></select>
+        </label>
+        <label>Modulation
+          <select id="qam_order"><option value="4">QPSK</option><option value="16" selected>16-QAM</option><option value="64">64-QAM</option></select>
+        </label>
+      </div>
+      <label class="slider-row">Pilot boost <output id="pilot_boost_out">30 dB</output>
+        <input type="range" id="pilot_boost_db" min="0" max="40" step="1" value="30">
+      </label>
+    </section>
+
+    <section class="panel">
+      <h3>Channel</h3>
+      <label>Profile
+        <select id="channel">
+          <option value="ntn" selected>NTN · LEO satellite</option>
+          <option value="eva">3GPP EVA · vehicular</option>
+          <option value="etu">3GPP ETU · urban</option>
+          <option value="custom">Custom two-path</option>
+        </select>
+      </label>
+      <div id="ch-terrestrial" class="hidden">
+        <label class="slider-row">UE speed <output id="speed_out">500 km/h</output>
+          <input type="range" id="speed_kmh" min="3" max="1000" step="1" value="500">
+        </label>
+        <label class="slider-row">Carrier <output id="fc_out">3.5 GHz</output>
+          <input type="range" id="fc_ghz" min="0.7" max="6" step="0.1" value="3.5">
+        </label>
+      </div>
+      <div id="ch-ntn">
+        <label class="slider-row">Residual Doppler <output id="resid_out">5.0 kHz</output>
+          <input type="range" id="resid_doppler_hz" min="100" max="6000" step="100" value="5000">
+        </label>
+        <label class="slider-row">Rician K <output id="k_out">10 dB</output>
+          <input type="range" id="k_factor_db" min="0" max="20" step="1" value="10">
+        </label>
+      </div>
+      <div id="ch-custom" class="hidden">
+        <label class="slider-row">Path Doppler <output id="cdop_out">3.0 kHz</output>
+          <input type="range" id="cust_doppler_hz" min="-6000" max="6000" step="100" value="3000">
+        </label>
+        <label class="slider-row">Echo delay <output id="cdel_out">4 µs</output>
+          <input type="range" id="cust_echo_delay_us" min="0" max="16" step="0.5" value="4">
+        </label>
+        <label class="slider-row">Echo gain <output id="cgain_out">-6 dB</output>
+          <input type="range" id="cust_echo_gain_db" min="-20" max="0" step="1" value="-6">
+        </label>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h3>Receiver</h3>
+      <div class="grid2">
+        <label>CSI
+          <select id="csi">
+            <option value="est" selected>Pilot · parametric</option>
+            <option value="est-taps">Pilot · tap readout</option>
+            <option value="perfect">Perfect (genie)</option>
+          </select>
+        </label>
+        <label>Detector
+          <select id="detector"><option value="lmmse" selected>LMMSE</option><option value="mp">Message passing</option></select>
+        </label>
+      </div>
+      <label class="slider-row">SNR <output id="snr_out">20 dB</output>
+        <input type="range" id="snr_db" min="0" max="35" step="1" value="20">
+      </label>
+      <label>Seed <span class="hint">(0 = random)</span>
+        <input type="number" id="seed" value="42" min="0">
+      </label>
+    </section>
+
+    <button id="run" class="cta">▶ &nbsp;Transmit frame</button>
+    <div id="run-status" class="status"></div>
+
+    <section class="panel dl">
+      <h3>IQ export <span class="hint">last TX frame</span></h3>
+      <div class="dl-row">
+        <a href="/api/download/cf32" download>cf32</a>
+        <a href="/api/download/sc16" download>sc16</a>
+        <a href="/api/download/cf32x4" download>cf32 ×4 RRC</a>
+      </div>
+    </section>
+  </aside>
+
+  <!-- =========================== main =========================== -->
+  <main>
+    <nav class="tabs">
+      <button class="tab active" data-tab="frame">Live frame</button>
+      <button class="tab" data-tab="sweep">BER sweep · OTFS vs OFDM</button>
+    </nav>
+
+    <div id="tab-frame">
+      <div class="metric-row" id="metrics"></div>
+
+      <div class="chart-grid">
+        <div class="card"><h4>TX delay-Doppler grid <span class="hint">|x[l,k]| — pilot + data</span></h4><div id="plot-tx"></div></div>
+        <div class="card"><h4>RX delay-Doppler grid <span class="hint">|y[l,k]| — channel visible</span></h4><div id="plot-rx"></div></div>
+        <div class="card"><h4>Zak-OTFS constellation <span class="hint">after DD equalisation</span></h4><div id="plot-const-otfs"></div></div>
+        <div class="card"><h4>CP-OFDM constellation <span class="hint">one-tap equaliser, same channel</span></h4><div id="plot-const-ofdm"></div></div>
+        <div class="card"><h4>Channel truth vs pilot estimate</h4><div id="paths"></div></div>
+        <div class="card"><h4>Spectrum <span class="hint">4× RRC oversampled</span></h4><div id="plot-psd"></div></div>
+      </div>
+    </div>
+
+    <div id="tab-sweep" class="hidden">
+      <div class="sweep-bar card">
+        <label>Study
+          <select id="sweep_kind">
+            <option value="speed" selected>BER vs UE speed (EVA)</option>
+            <option value="ntn">BER vs NTN residual Doppler</option>
+            <option value="snr">BER vs SNR @ 500 km/h</option>
+          </select>
+        </label>
+        <label>Frames / point
+          <select id="sweep_frames"><option>4</option><option selected>8</option><option>16</option></select>
+        </label>
+        <button id="run-sweep" class="cta small">▶ &nbsp;Run sweep</button>
+        <div class="progress"><div id="sweep-progress"></div></div>
+        <span id="sweep-status" class="status"></span>
+      </div>
+      <div class="card tall"><div id="plot-sweep"></div></div>
+    </div>
+
+    <footer>
+      Reference SW model · Cohere Zak-OTFS feasibility (Phase 1) · DSP engine: validated <code>otfs</code> Python package (26 tests) ·
+      CP-OFDM baseline uses ideal one-tap CSI — OFDM floors shown are lower bounds
+    </footer>
+  </main>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

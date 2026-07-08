@@ -1,0 +1,4 @@
+# Shell scripts must land on Linux hosts with LF endings regardless of
+# the Windows dev machine's autocrlf setting.
+*.sh text eol=lf
+*.py text eol=lf
