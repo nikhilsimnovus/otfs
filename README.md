@@ -154,6 +154,21 @@ on port 8050. It drives the same validated `otfs` package — no duplicated DSP.
 * **IQ export** buttons download the last TX frame as cf32 / sc16 / 4× RRC
   oversampled cf32 for SDR playback (scope C).
 
+### Server install & self-update (oneclick-style)
+
+```bash
+# one-shot install on Ubuntu/Debian or RHEL-family (creates the `otfs`
+# systemd service on port 8050; OTFS_PORT env overrides):
+curl -fsSL https://github.com/nikhilsimnovus/otfs/archive/refs/heads/main.tar.gz \
+  | tar xz && sudo bash otfs-main/scripts/install.sh
+```
+
+The **Update** button in the topbar (POST `/api/update`) pulls the latest
+main tarball from this repo and re-runs the same idempotent installer via a
+narrow sudoers entry (`/usr/local/sbin/otfs-update` only) — bump `VERSION`
+in `webui/app.py` on every push so the applied build is visible in the UI.
+Reference deployment: `http://192.168.1.36:8050`.
+
 ## 5. Phase 2 — SDR / Amarisoft path (next)
 
 1. **Open-loop first (scope C)**: play `results/*_x4.cf32` (RRC-oversampled)

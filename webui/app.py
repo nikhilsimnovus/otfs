@@ -34,7 +34,7 @@ from otfs.qam import qam_map, qam_constellation
 # Studio version. Bump on every push to the otfs repo so operators can
 # confirm the Update button actually applied — the new number shows up in
 # the topbar after the page reloads.
-VERSION = "1.0.0"
+VERSION = "1.0.1"
 
 HOST = os.environ.get("OTFS_HOST", "0.0.0.0")
 PORT = int(os.environ.get("OTFS_PORT", "8050"))
